@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Завдання 4 - Калькулятор з рядка</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 450px;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .subtitle {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 15px;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .reset-btn {
+            background: #6c757d;
+            margin-top: 8px;
+        }
+        .reset-btn:hover {
+            background: #5a6268;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 8px;
+            display: none;
+            text-align: center;
+        }
+        .result.show {
+            display: block;
+        }
+        .result-expression {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        .result-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #28a745;
+            word-break: break-all;
+        }
+        .error-msg {
+            color: red;
+            font-size: 13px;
+            margin-top: 8px;
+            display: none;
+            text-align: center;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .back-link:hover {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Завдання 4. Калькулятор з рядка</h2>
+        <div class="subtitle">Обчислення арифметичних виразів у вигляді рядка. Підтримуються операції +, -, *, /, дужки, від'ємні числа та пробіли</div>
+
+        <div class="input-group">
+            <label>Введіть математичний вираз</label>
+            <input type="text" id="exprInput" placeholder="Наприклад: 12 + 7 або (4+5)*3">
+        </div>
+
+        <button id="calcBtn">Обчислити</button>
+        <button id="resetBtn" class="reset-btn">Очистити</button>
+
+        <div class="error-msg" id="errorMsg"></div>
+        <div class="result" id="result">
+            <div class="result-expression" id="resultExpression"></div>
+            <div class="result-value" id="resultValue"></div>
+        </div>
+
+        <a href="index.html" class="back-link">← На головну</a>
+    </div>
+
+    <script>
+        const exprInput = document.getElementById('exprInput');
+        const calcBtn = document.getElementById('calcBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const resultDiv = document.getElementById('result');
+        const resultExpression = document.getElementById('resultExpression');
+        const resultValue = document.getElementById('resultValue');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function calculate(expression) {
+            let expr = expression.replace(/\s/g, '');
+            
+            if (expr === '') {
+                throw new Error('Вираз не може бути порожнім');
+            }
+
+            if (!/^[\d+\-*/().]+$/.test(expr)) {
+                throw new Error('Вираз містить неприпустимі символи');
+            }
+
+            if (expr[0] === '-') {
+                expr = '0' + expr;
+            }
+
+            expr = expr.replace(/--/g, '+');
+            expr = expr.replace(/\)\(/g, ')*(');
+            expr = expr.replace(/(\d)\(/g, '$1*(');
+            expr = expr.replace(/\)(\d)/g, ')*$1');
+
+            function getPriority(op) {
+                switch (op) {
+                    case '+':
+                    case '-': return 1;
+                    case '*':
+                    case '/': return 2;
+                    default: return 0;
+                }
+            }
+
+            function applyOperation(a, b, op) {
+                switch (op) {
+                    case '+': return a + b;
+                    case '-': return a - b;
+                    case '*': return a * b;
+                    case '/':
+                        if (b === 0) throw new Error('Ділення на нуль');
+                        return a / b;
+                    default: throw new Error('Невідома операція: ' + op);
+                }
+            }
+
+            const values = [];
+            const operators = [];
+            
+            let i = 0;
+            while (i < expr.length) {
+                const ch = expr[i];
+                
+                if (ch >= '0' && ch <= '9' || ch === '.') {
+                    let num = '';
+                    while (i < expr.length && ((expr[i] >= '0' && expr[i] <= '9') || expr[i] === '.')) {
+                        num += expr[i];
+                        i++;
+                    }
+                    values.push(parseFloat(num));
+                    continue;
+                }
+                else if (ch === '(') {
+                    operators.push(ch);
+                    i++;
+                }
+                else if (ch === ')') {
+                    while (operators.length > 0 && operators[operators.length - 1] !== '(') {
+                        const op = operators.pop();
+                        const b = values.pop();
+                        const a = values.pop();
+                        values.push(applyOperation(a, b, op));
+                    }
+                    operators.pop();
+                    i++;
+                }
+                else if (ch === '+' || ch === '-' || ch === '*' || ch === '/') {
+                    if ((ch === '-' || ch === '+') && (i === 0 || expr[i-1] === '(' || operators[operators.length-1] === '(')) {
+                        let unaryNum = '';
+                        i++;
+                        while (i < expr.length && ((expr[i] >= '0' && expr[i] <= '9') || expr[i] === '.')) {
+                            unaryNum += expr[i];
+                            i++;
+                        }
+                        const num = parseFloat((ch === '-' ? '-' : '') + unaryNum);
+                        values.push(num);
+                        continue;
+                    }
+                    
+                    while (operators.length > 0 &&
+                           operators[operators.length - 1] !== '(' &&
+                           getPriority(operators[operators.length - 1]) >= getPriority(ch)) {
+                        const op = operators.pop();
+                        const b = values.pop();
+                        const a = values.pop();
+                        values.push(applyOperation(a, b, op));
+                    }
+                    operators.push(ch);
+                    i++;
+                }
+                else {
+                    i++;
+                }
+            }
+
+            while (operators.length > 0) {
+                const op = operators.pop();
+                const b = values.pop();
+                const a = values.pop();
+                values.push(applyOperation(a, b, op));
+            }
+            
+            const result = values[0];
+            
+            if (!isFinite(result)) {
+                throw new Error('Результат є нескінченністю');
+            }
+            
+            return Math.round(result * 1e10) / 1e10;
+        }
+
+        function evaluate() {
+            const expr = exprInput.value.trim();
+            errorMsg.style.display = 'none';
+            resultDiv.classList.remove('show');
+            
+            if (expr === '') {
+                errorMsg.textContent = 'Введіть математичний вираз';
+                errorMsg.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const result = calculate(expr);
+                resultExpression.textContent = expr;
+                resultValue.textContent = result;
+                resultDiv.classList.add('show');
+            } catch (err) {
+                errorMsg.textContent = 'Помилка: ' + err.message;
+                errorMsg.style.display = 'block';
+            }
+        }
+        
+        function reset() {
+            exprInput.value = '';
+            resultDiv.classList.remove('show');
+            errorMsg.style.display = 'none';
+            exprInput.focus();
+        }
+        
+        calcBtn.addEventListener('click', evaluate);
+        resetBtn.addEventListener('click', reset);
+        exprInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') evaluate();
+        });
+    </script>
+</body>
+</html>

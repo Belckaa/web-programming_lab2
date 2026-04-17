@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>Завдання 1 - Число в текст</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 400px;
+        }
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .reset-btn {
+            background: #6c757d;
+            margin-top: 8px;
+        }
+        .reset-btn:hover {
+            background: #5a6268;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 8px;
+            display: none;
+        }
+        .result.show {
+            display: block;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+        .error.show {
+            display: block;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+        }
+        .back-link:hover {
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Завдання 1. Двозначне число в текст</h2>
+        <div class="input-group">
+            <label>Введіть двозначне число (10-99)</label>
+            <input type="text" id="numberInput" placeholder="Наприклад: 35, 89, 12">
+            <div class="error" id="errorMsg">Помилка: введіть ціле число від 10 до 99</div>
+        </div>
+        <button id="convertBtn">Перетворити</button>
+        <button id="resetBtn" class="reset-btn">Очистити</button>
+        <div class="result" id="result">
+            <p id="resultText"></p>
+        </div>
+        <a href="index.html" class="back-link">← На головну</a>
+    </div>
+    <script>
+        const units = ['', 'один', 'два', 'три', 'чотири', 'п\'ять', 'шість', 'сім', 'вісім', 'дев\'ять'];
+        const tens = ['', 'десять', 'двадцять', 'тридцять', 'сорок', 'п\'ятдесят', 'шістдесят', 'сімдесят', 'вісімдесят', 'дев\'яносто'];
+        const teens = ['десять', 'одинадцять', 'дванадцять', 'тринадцять', 'чотирнадцять', 'п\'ятнадцять', 'шістнадцять', 'сімнадцять', 'вісімнадцять', 'дев\'ятнадцять'];
+
+        function numberToWords(num) {
+            if (num >= 10 && num <= 19) {
+                return teens[num - 10];
+            }
+            const ten = Math.floor(num / 10);
+            const unit = num % 10;
+            if (unit === 0) return tens[ten];
+            return tens[ten] + ' ' + units[unit];
+        }
+
+        const input = document.getElementById('numberInput');
+        const convertBtn = document.getElementById('convertBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const resultDiv = document.getElementById('result');
+        const resultText = document.getElementById('resultText');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function validate() {
+            const val = input.value.trim();
+            if (!/^\d{2}$/.test(val)) {
+                errorMsg.classList.add('show');
+                return false;
+            }
+            const num = parseInt(val, 10);
+            if (num < 10 || num > 99) {
+                errorMsg.classList.add('show');
+                return false;
+            }
+            errorMsg.classList.remove('show');
+            return num;
+        }
+
+        function convert() {
+            const num = validate();
+            if (num === false) return;
+            const words = numberToWords(num);
+            resultText.innerHTML = num + ' - ' + words;
+            resultDiv.classList.add('show');
+        }
+
+        function reset() {
+            input.value = '';
+            resultDiv.classList.remove('show');
+            errorMsg.classList.remove('show');
+            input.focus();
+        }
+
+        convertBtn.addEventListener('click', convert);
+        resetBtn.addEventListener('click', reset);
+        input.addEventListener('keypress', (e) => { if (e.key === 'Enter') convert(); });
+    </script>
+</body>
+</html>
